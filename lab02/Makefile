@@ -1,5 +1,5 @@
-hello: hello.c
-	gcc -Wall -Wextra -o hello hello.c
+tempConvert: tempConvert.c
+	gcc -Wall -Wextra -o tempConvert tempConvert.c
 
 clean:
-	rm -f hello
+	rm -f tempConvert
