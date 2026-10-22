@@ -1,18 +1,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
-int MAX_LINE = 256;
+#define MAX_LINE 256
 
 // Prototypes
 void displayTestResults(void);
 void displaySummary(void);
-void runTest(char args[][MAX_LINE], const int amountOfComm);
+void runTest(char* commandBeingRun, char *args[]);
 
 int main(){
-	int totalTests;
-	int successfulTests;
-	int failedTests;
+	int totalTests = 0;
+	int successfulTests = 0;
+	int failedTests = 0;
 	// Open tests.txt for reading. If the file can't be opened, throw an error
 	FILE *testplanFile;
 	char line[MAX_LINE];
@@ -26,62 +28,71 @@ int main(){
 
 	// Use the Standard Library to read the file line by line with fgets()
 	while(fgets(line, sizeof(line), testplanFile) != NULL){
+    // Remove trailing newline char
+		strtok(line, "\n");
+    
+    // Copy the command in it's entirety
+    char* commandToRun;
+    strcpy(commandToRun, line);
 
-		// Skip blank lines and lines begining with #
-    if (line[0] == '#' || line[0] == 13){
-      continue; 
-    }
+    // Create a tokenized char array
+    char* tok = strtok(line, " ");
 
-    // TODO Remove trailing newline char
-		for (size_t i = 0; line[i] != '\0'; i++){
-      if (line[i] == '\n'){
-        line[i] = '\0';
-        printf("Successfuly replaced\n");
-      }
+    // Skip blank lines and lines begining with #
+    if (tok[0] == '#' || tok == NULL){
+      continue;
     }
 
     // Increment the amout of tests
     totalTests++;
-    
-		// TODO parse each test command into an argument array
-    char commands[MAX_LINE][MAX_LINE];
-   
-    size_t incrementer = 0;
-    size_t commandParse = 0;
-    
-    // Itterate through the line
-    for (int i = 0; line[i] != '\0'; i++){
-      // Check for a space
-      if (line[i] == ' '){
-        incrementer++;
-        commandParse = (i + 1);
-        continue;
-      }
-      // Set the commands line
-      commands[incrementer][i - commandParse] = line[i];
-      printf("added %c to %d, %d\n", line[i], incrementer, i - commandParse);
+		
+    // Parse each test command into an argument array suitable for execvp()
+    char *args[256] = {NULL};
+    int argc = 0;
+    while(tok != NULL && argc < 255){
+      args[argc++] = tok;
+      tok = strtok(NULL, " ");
     }
 
 		// Run the test
-		runTest(commands, incrementer + 1);
+		runTest(commandToRun, args);
 
 		// TODO Continue even if the test fails
     
-
-    // Clean up the commands array
-    // for (int i = 0; i < sizeof(commands); i++){
-    //  for (int j = 0; j < sizeof(commands[i]); j++){
-    //    commands[i][j] = 0;
-    //  }
-    //}
 	}
-  return 1;
+  return 0;
 }
 
 // Function that runs the commands
-void runTest(char args[][MAX_LINE], const int amountOfComm){
-  // TESTING the function input
-  for (int i = 0; i < amountOfComm; i++){
-    printf("%s\n", args[i]);
+void runTest(char* commandBeingRun, char *args[]){
+  // TODO Run the commands 
+  // Display the command
+  printf("===============================\n");
+  printf("Running the command: %s\n", commandBeingRun);
+  printf("===============================\n");
+
+  // Fork the process
+
+  pid_t pid = fork();
+
+  // Checking fork status
+  if (pid == -1){
+    perror("Fork");
+
+  } else if (pid == 0){ // Child code
+    // Exec the command
+    execvp(args[0], args);
+
+    // Catch an error, if the command was incorrectly executed, perror triggers
+    perror(commandBeingRun);
+    exit(1);
+
+  } else {              // Parent code
+    // Wait for child
+    int status;
+
+    wait(&status);
+
   }
+
 }
