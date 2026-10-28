@@ -1,0 +1,14 @@
+Experiment 1: Normal execution
+Program runs as expected, and executes the commands in the correct order.
+
+Experiment 2: Test plan comments
+Program correctly ignores the blank and commented lines.
+
+Experiment 3: Failed test
+Program correctly flags the invalid_test_command as a failed execution, continues, and records the error.
+
+Experiment 4: Reorder tests
+The tests were executed and printed in the correct order.
+
+Experiment 5: Missing test plan
+The program correctly does not open the file, prints the error, and stops.

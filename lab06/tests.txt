@@ -1,5 +1,8 @@
-pwd
 date
+
 ls -l
+# comment
 df -h
+invalid_test_program
 ps -eo pid,ppid,comm
+pwd

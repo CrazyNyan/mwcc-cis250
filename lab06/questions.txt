@@ -1,0 +1,46 @@
+Question 1:
+fgets() is used in the test runner as the function only gets one line at a time from
+the file, and the reader constantly moves down the file so no repeats happen.
+
+Question 2:
+Each command needs to be parsed into an argument array before calling execvp() as the 
+inputs for execvp() are a string, being the command, and an array of arguments for the 
+command. Each argument needs to be it's own string.
+
+Question 3:
+fork() returns:
+>0; PID of the child process.
+0;  If the process is the child.
+-1; If there was a failure.
+
+Question 4:
+After execvp() succeeds, the child process is killed.
+
+Question 5:
+The parent must call wait() before launching the next test to make sure that the first
+test finishes before continuing. If the parent did not wait, memory leaks could occur
+from failed tests leaving open and accessible memory.
+
+Question 6:
+The test runner determines whether a test passed or failed on the exit code of the child
+that runs the test. After calling execvp(), no other lines of code should be executed,
+so a non-zero exit code can be used. If the test was successful, the exit code is 0. 
+If the test failed, the exit code is whatever it was set as (1).
+
+Question 7:
+If a test program can not be executed, the system should flag it and the test runner should
+continue with the tests. The runner should continue as there could be a large number of
+tests and if it stopped at each failure point it would be much harder to assess the 
+system that the tests are being executed on.
+
+Question 8:
+Problems that could arise from a parent launching all tests without waiting for them to 
+finish could be;
+Errors with tests that need to be performed sequentially.
+To much processing power/memory required to run all tests at the same time causing a
+crash.
+As each test completes, the parent could lose track of which ones completed and which ones
+failed, leading to inaccurate test results and memory leaks.
+
+
+
