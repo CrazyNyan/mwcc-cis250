@@ -4,7 +4,7 @@
 #include <sys/wait.h>   // waitpid()
 #include <unistd.h>     // close(), fork(), pipe(), read(), sleep(), write()
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 8192
 #define INTERVAL 5
 
 int main(void)
@@ -49,7 +49,7 @@ int main(void)
     for (int i = 0; i < 5; i++)
     {
       FILE *file = fopen("/proc/loadavg", "r");
-
+      
       if (file != NULL)
       {
         if (fgets(buffer, sizeof(buffer), file) != NULL)
@@ -88,21 +88,28 @@ int main(void)
       close(*cpu_pipe);
 
       // Buffer for reading memory Info
-      char buffer[BUFFER_SIZE];
-
+      char read_buffer[BUFFER_SIZE];
+      char write_buffer[BUFFER_SIZE];
+      
       for (int i = 0; i < 5; i++){
+        memset(write_buffer, 0, sizeof(write_buffer));
         FILE *file = fopen("/proc/meminfo", "r");
-
-        if (file!= NULL){
-          while (fgets(buffer, sizeof(buffer), file) != NULL){
+        //FILE *output = fopen("memoryout.txt", "w");
+        if (file != NULL){
+          while(fgets(read_buffer, sizeof(read_buffer), file) != NULL){
+            //fwrite(buffer, sizeof(char), strlen(buffer), output);  
             // Send the memory info through the memory pipe
-            write(mem_pipe[1], buffer, strlen(buffer) + 1);
-          }
+            strcat(write_buffer, read_buffer);
 
+          
+            //printf("I just wrote: %s to the pipe\n", buffer);
+          
+          }
+          write(mem_pipe[1], write_buffer, strlen(write_buffer) + 1);
           // Close the memory info file
           fclose(file);
         }
-
+        //fclose(output);
         sleep(INTERVAL);
       }
 
@@ -121,24 +128,29 @@ int main(void)
 
       for (int i = 0; i < 5; i++)
       {
+        int bytes_read = 0;
         // Read from the CPU Pipe
-        read(cpu_pipe[0], cpu_buffer, sizeof(cpu_buffer));
+        bytes_read = read(cpu_pipe[0], cpu_buffer, sizeof(cpu_buffer));
 
         // Clear the Terminal and Move Cursor to the Top.
         //printf("\033[2J\033[H");
 
         // Display CPU Info.
+        cpu_buffer[bytes_read] = '\0';
         printf("CPU Load Average: %s\n", cpu_buffer);
 
         // Display Memory Info.
         
         // Read from the memory pipe
-        ssize_t bytes_read = read(mem_pipe[0], mem_buffer, sizeof(mem_buffer));
-        mem_buffer[bytes_read] = '\0';
-       // while(read(mem_pipe[0], mem_buffer, sizeof(mem_buffer)) != 0){
-       //   printf("%s", mem_buffer);
-       // }
-        printf("%s read by %d bytes", mem_buffer, bytes_read);
+        printf("Begin reading the /proc/meminfo file:\n");
+        bytes_read = read(mem_pipe[0], mem_buffer, sizeof(mem_buffer));
+          //mem_buffer[bytes_read] = '\0';
+          //printf("I just read: %c from the pipe with %d bytes\n", mem_buffer, bytes_read);
+        for (int i = 0; i < bytes_read; i++){
+          printf("%c", mem_buffer[i]);
+        }
+        printf("End reading.\n\n");
+       // printf("%s read by %d bytes", mem_buffer, bytes_read);
       }
 
       // Close the Read-End of the CPU Pipe and Memory Pipe.
