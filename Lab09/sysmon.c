@@ -22,8 +22,9 @@ int main(void)
     perror("CPU pipe");
     return -1;
   }
-
-  if (pipe(mem_pipe) == -1){
+  // Memory Pipe
+  if (pipe(mem_pipe) == -1)
+  {
     perror("Memory pipe");
     return -1;
   }
@@ -47,7 +48,7 @@ int main(void)
     // Buffer for Reading CPU Info.
     char buffer[BUFFER_SIZE];
 
-    for (int i = 0; i < 5; i++)
+    while (1)
     {
       FILE *file = fopen("/proc/loadavg", "r");
       
@@ -79,7 +80,8 @@ int main(void)
 
     mem_pid = fork();
 
-    if (mem_pid == 0){
+    if (mem_pid == 0)
+    {
       // MEMORY MONITOR PROCESS (Child).
 
       // Close the reed-end of the memory pipe.
@@ -91,21 +93,21 @@ int main(void)
       // Buffer for reading memory Info
       char buffer[BUFFER_SIZE];
       
-      for (int i = 0; i < 5; i++){
+      while (1)
+      {
         FILE *file = fopen("/proc/meminfo", "r");
 
-        if (file != NULL){
-          while(fgets(buffer, sizeof(buffer), file) != NULL){
+        if (file != NULL)
+        {
+          while(fgets(buffer, sizeof(buffer), file) != NULL)
+          {
             // Send the memory info through the memory pipe
             write(mem_pipe[1], buffer, strlen(buffer) + 1);
-          
-
           }
 
           // Close the memory info file
           fclose(file);
         }
-        //fclose(output);
         sleep(INTERVAL);
       }
 
@@ -114,7 +116,9 @@ int main(void)
 
       exit(0);
 
-    } else {
+    } 
+    else 
+    {
       
       // Parent Process
 
@@ -123,7 +127,7 @@ int main(void)
       close(mem_pipe[1]);
 
       // Loop 5 times to grab the data from the pipes
-      for (int i = 0; i < 5; i++)
+      while (1)
       {
         int bytes_read = 0;
         // Read from the CPU Pipe
@@ -146,17 +150,19 @@ int main(void)
 
         printf("Begin reading /proc/meminfo file:\n"); 
         
-        // Loop to read the file info in case it doesn't fit in one buffer_size
+        // Loop to read the file info in case it doesn't fit in one buffer size
 
-        do{
+        do {
           poll_out = poll(file_discriptors, 1, 100);
-          if (poll_out < 0){
+          if (poll_out < 0)
+          {
             perror("Poll error");
             return(1);
-          } else if ((poll_out != 0) && file_discriptors[0].events & POLLIN){
+          } else if ((poll_out != 0) && (file_discriptors[0].events & POLLIN)){
             // Read the file and print it out to standard out.
             bytes_read = read(mem_pipe[0], mem_buffer, sizeof(mem_buffer));
-            for (int i = 0; i < bytes_read; i++){
+            for (int i = 0; i < bytes_read; i++)
+            {
               printf("%c", mem_buffer[i]);
             }
           }
